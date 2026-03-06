@@ -1,11 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fodd/Utils/auth_service.dart';
+import 'package:fodd/Widgets/icon_button.dart';
 import 'package:iconsax/iconsax.dart';
 import '../Utils/Constants.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
-  final String? initialEmail; // Nhận email từ màn hình Login
+  final String? initialEmail;
   const ForgotPasswordScreen({super.key, this.initialEmail});
 
   @override
@@ -20,20 +21,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   void initState() {
     super.initState();
-    // Tự động điền email nếu có truyền sang từ Login
     _emailController = TextEditingController(text: widget.initialEmail);
   }
 
   void _resetPassword() async {
     String email = _emailController.text.trim();
-
     if (email.isEmpty) {
       _showSnackBar("Vui lòng nhập Email của bạn", Colors.orange);
       return;
     }
 
     setState(() => _isLoading = true);
-
     try {
       final querySnapshot = await FirebaseFirestore.instance
           .collection("user_profile")
@@ -55,9 +53,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           Navigator.pop(context);
         }
       } else {
-        if (mounted) {
-          _showSnackBar("Có lỗi xảy ra, vui lòng thử lại sau.", Colors.red);
-        }
+        if (mounted) _showSnackBar("Có lỗi xảy ra, vui lòng thử lại sau.", Colors.red);
       }
     } catch (e) {
       setState(() => _isLoading = false);
@@ -67,24 +63,25 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   void _showSnackBar(String message, Color color) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: color,
-        behavior: SnackBarBehavior.floating,
-      ),
+      SnackBar(content: Text(message), backgroundColor: color, behavior: SnackBarBehavior.floating),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: kbackgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor, // Đồng bộ màu nền
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
+        automaticallyImplyLeading: false,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 15),
+          child: MyIconButton(
+            icon: Icons.arrow_back_ios_new, 
+            onPressed: () => Navigator.pop(context)
+          ),
         ),
       ),
       body: Padding(
@@ -94,28 +91,27 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           children: [
             const Icon(Iconsax.key_square, size: 80, color: kprimaryColor),
             const SizedBox(height: 30),
-            const Text(
+            Text(
               "Quên mật khẩu?",
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: theme.textTheme.bodyLarge?.color),
             ),
             const SizedBox(height: 10),
-            const Text(
+            Text(
               "Nhập email của bạn để nhận liên kết đặt lại mật khẩu mới.",
-              style: TextStyle(color: Colors.grey, fontSize: 16),
+              style: TextStyle(color: theme.textTheme.bodyMedium?.color?.withOpacity(0.6), fontSize: 16),
             ),
             const SizedBox(height: 40),
             TextField(
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
+              style: TextStyle(color: theme.textTheme.bodyLarge?.color),
               decoration: InputDecoration(
                 hintText: "Nhập Email",
-                prefixIcon: const Icon(Iconsax.sms),
+                hintStyle: const TextStyle(color: Colors.grey),
+                prefixIcon: const Icon(Iconsax.sms, color: Colors.grey),
                 filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
-                  borderSide: BorderSide.none,
-                ),
+                fillColor: theme.cardColor, // Đồng bộ màu ô nhập liệu
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
               ),
             ),
             const SizedBox(height: 30),
@@ -130,10 +126,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 ),
                 child: _isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text(
-                        "Gửi yêu cầu",
-                        style: TextStyle(color: Colors.white, fontSize: 18),
-                      ),
+                    : const Text("Gửi yêu cầu", style: TextStyle(color: Colors.white, fontSize: 18)),
               ),
             ),
           ],

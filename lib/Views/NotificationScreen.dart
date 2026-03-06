@@ -17,7 +17,6 @@ class NotificationScreen extends StatelessWidget {
         .collection("notifications");
 
     return Scaffold(
-      // Sử dụng màu nền của hệ thống
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -27,7 +26,7 @@ class NotificationScreen extends StatelessWidget {
           "Thông báo", 
           style: TextStyle(
             fontWeight: FontWeight.bold, 
-            color: Theme.of(context).textTheme.bodyLarge?.color // Tự đổi màu chữ tiêu đề
+            color: Theme.of(context).textTheme.bodyLarge?.color
           )
         ),
         centerTitle: true,
@@ -47,7 +46,20 @@ class NotificationScreen extends StatelessWidget {
           }
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text("Bạn chưa có thông báo nào"));
+            // HIỂN THỊ ICON KHI TRỐNG THÔNG BÁO
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Iconsax.notification_bing, size: 100, color: Colors.grey.shade300),
+                  const SizedBox(height: 20),
+                  const Text(
+                    "Bạn chưa có thông báo nào", 
+                    style: TextStyle(fontSize: 18, color: Colors.grey)
+                  ),
+                ],
+              ),
+            );
           }
 
           return ListView.builder(
@@ -70,7 +82,6 @@ class NotificationScreen extends StatelessWidget {
                   margin: const EdgeInsets.only(bottom: 15),
                   padding: const EdgeInsets.all(15),
                   decoration: BoxDecoration(
-                    // Sử dụng màu Card của hệ thống
                     color: isRead ? Theme.of(context).cardColor : kprimaryColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(15),
                     border: isRead ? null : Border.all(color: kprimaryColor.withOpacity(0.3)),

@@ -1,17 +1,36 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:fodd/Views/OrderDetailScreen.dart';
+import 'package:fodd/Widgets/shimmer_skeleton.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:intl/intl.dart';
 import '../Utils/Constants.dart';
 import '../Widgets/icon_button.dart';
 
 class OrderHistoryScreen extends StatelessWidget {
   const OrderHistoryScreen({super.key});
 
+  Future<void> _cancelOrder(BuildContext context, String orderId) async {
+    try {
+      await FirebaseFirestore.instance.collection("orders").doc(orderId).update({
+        "status": "Đã hủy",
+      });
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Đã hủy đơn hàng thành công!"), backgroundColor: Colors.orange));
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Lỗi khi hủy đơn hàng"), backgroundColor: Colors.red));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
     final theme = Theme.of(context);
+    final currencyFormat = NumberFormat("#,##0", "vi_VN");
     
     final Query ordersQuery = FirebaseFirestore.instance
         .collection("orders")
@@ -23,40 +42,22 @@ class OrderHistoryScreen extends StatelessWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         automaticallyImplyLeading: false,
-        title: Text(
-          "Lịch sử đơn hàng", 
-          style: TextStyle(
-            fontWeight: FontWeight.bold, 
-            color: theme.textTheme.bodyLarge?.color
-          )
-        ),
+        title: Text("Lịch sử đơn hàng", style: TextStyle(fontWeight: FontWeight.bold, color: theme.textTheme.bodyLarge?.color)),
         centerTitle: true,
         leading: Padding(
           padding: const EdgeInsets.only(left: 15),
-          child: MyIconButton(
-            icon: Icons.arrow_back_ios_new,
-            onPressed: () => Navigator.pop(context),
-          ),
+          child: MyIconButton(icon: Icons.arrow_back_ios_new, onPressed: () => Navigator.pop(context)),
         ),
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: ordersQuery.snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return ListView.builder(padding: const EdgeInsets.all(15), itemCount: 5, itemBuilder: (context, index) => const OrderSkeleton());
           }
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Iconsax.box, size: 80, color: Colors.grey.shade400),
-                  const SizedBox(height: 20),
-                  const Text("Bạn chưa có đơn hàng nào", style: TextStyle(fontSize: 16, color: Colors.grey)),
-                ],
-              ),
-            );
+            return const Center(child: Text("Bạn chưa có đơn hàng nào", style: TextStyle(color: Colors.grey)));
           }
 
           final List<DocumentSnapshot> docs = snapshot.data!.docs;
@@ -74,71 +75,42 @@ class OrderHistoryScreen extends StatelessWidget {
               final data = order.data() as Map<String, dynamic>;
               final double total = (data["total"] ?? 0).toDouble();
               final String status = data["status"] ?? "Đang xử lý";
-              final Map items = data["items"] ?? {};
 
-              return Container(
-                margin: const EdgeInsets.only(bottom: 15),
-                padding: const EdgeInsets.all(15),
-                decoration: BoxDecoration(
-                  color: theme.cardColor,
-                  borderRadius: BorderRadius.circular(15),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(theme.brightness == Brightness.dark ? 0.3 : 0.05), 
-                      blurRadius: 10, 
-                      spreadRadius: 2
-                    )
-                  ]
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "Mã ĐH: ${order.id.substring(0, 8).toUpperCase()}", 
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold, 
-                            fontSize: 14,
-                            color: theme.textTheme.bodyLarge?.color
-                          )
-                        ),
-                        _buildStatusChip(status),
-                      ],
-                    ),
-                    Divider(height: 20, color: theme.dividerColor),
-                    Text(
-                      "Số lượng món: ${items.length}", 
-                      style: TextStyle(color: theme.textTheme.bodyMedium?.color?.withOpacity(0.7))
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      "Ngày đặt: ${_formatDate(data["createdAt"])}", 
-                      style: const TextStyle(color: Colors.grey, fontSize: 13)
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "Tổng tiền:", 
-                          style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            color: theme.textTheme.bodyLarge?.color
-                          )
-                        ),
-                        Text(
-                          "${total.toStringAsFixed(0)} VNĐ", 
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold, 
-                            fontSize: 18, 
-                            color: kprimaryColor
-                          )
-                        ),
-                      ],
-                    ),
-                  ],
+              return GestureDetector(
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => OrderDetailScreen(order: order))),
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 15),
+                  padding: const EdgeInsets.all(15),
+                  decoration: BoxDecoration(color: theme.cardColor, borderRadius: BorderRadius.circular(15), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)]),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text("Đơn # ${order.id.substring(0, 6).toUpperCase()}", style: const TextStyle(fontWeight: FontWeight.bold)),
+                          _buildStatusChip(status),
+                        ],
+                      ),
+                      const Divider(height: 25),
+                      Text("Tổng tiền: ${currencyFormat.format(total)} VNĐ", style: const TextStyle(color: kprimaryColor, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 10),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(_formatDate(data["createdAt"]), style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                          // CHỈ CHO PHÉP HỦY KHI ĐANG "CHỜ XÁC NHẬN"
+                          if (status == "Chờ xác nhận")
+                            TextButton(
+                              onPressed: () => _cancelOrder(context, order.id),
+                              child: const Text("Hủy đơn", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                            )
+                          else
+                            const Text("Xem chi tiết >", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               );
             },
@@ -149,27 +121,21 @@ class OrderHistoryScreen extends StatelessWidget {
   }
 
   Widget _buildStatusChip(String status) {
-    Color color = Colors.orange;
-    if (status == "Đã giao") color = Colors.green;
+    Color color = Colors.grey;
+    if (status == "Đang chuẩn bị") color = Colors.orange;
+    if (status == "Đang giao") color = Colors.blue;
+    if (status == "Đã giao thành công") color = Colors.green;
     if (status == "Đã hủy") color = Colors.red;
-
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Text(
-        status,
-        style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12),
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+      child: Text(status, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 10)),
     );
   }
 
   String _formatDate(dynamic timestamp) {
     if (timestamp == null) return "";
     DateTime date = (timestamp as Timestamp).toDate();
-    String minute = date.minute.toString().padLeft(2, '0');
-    return "${date.day}/${date.month}/${date.year} ${date.hour}:$minute";
+    return "${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}";
   }
 }

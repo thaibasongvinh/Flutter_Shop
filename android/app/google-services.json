@@ -12,7 +12,12 @@
           "package_name": "com.example.fodd"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "31364879032-rthgvjjv8s1vmuqt8c0c0f6l0c5c76am.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBCHOy1OjeCgRtgrm6UX3xkAGOwA8nOJGg"
@@ -20,7 +25,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "31364879032-rthgvjjv8s1vmuqt8c0c0f6l0c5c76am.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "31364879032-3cd8mlul42ipuph6t7e4qplqql9e9ji8.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.fodd"
+              }
+            }
+          ]
         }
       }
     }
