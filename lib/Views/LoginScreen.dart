@@ -71,10 +71,7 @@ class _LoginScreenState extends State<LoginScreen> {
         
         await Future.delayed(const Duration(seconds: 1));
         if (mounted) {
-          Navigator.pushReplacement(
-            context, 
-            MaterialPageRoute(builder: (context) => const MyFood())
-          );
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MyFood()));
         }
       }
     } on FirebaseAuthException catch (e) {
@@ -98,13 +95,26 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  // ĐĂNG NHẬP GOOGLE
+  void _loginWithGoogle() async {
+    setState(() => _isLoading = true);
+    final user = await _authService.signInWithGoogle();
+    setState(() => _isLoading = false);
+
+    if (user != null) {
+      _showSnackBar("Đăng nhập bằng Google thành công!", Colors.green);
+      await Future.delayed(const Duration(seconds: 1));
+      if (mounted) {
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const MyFood()));
+      }
+    } else {
+      _showSnackBar("Đăng nhập Google thất bại hoặc bị hủy.", Colors.red);
+    }
+  }
+
   void _showSnackBar(String message, Color color) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message), 
-        backgroundColor: color, 
-        behavior: SnackBarBehavior.floating
-      ),
+      SnackBar(content: Text(message), backgroundColor: color, behavior: SnackBarBehavior.floating),
     );
   }
 
@@ -131,12 +141,10 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Iconsax.note_21, size: 100, color: kprimaryColor),
-              const SizedBox(height: 30),
+              Icon(Iconsax.note_21, size: 80, color: kprimaryColor),
+              const SizedBox(height: 20),
               Text("Welcome Back!", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: theme.textTheme.bodyLarge?.color)),
-              const SizedBox(height: 10),
-              Text("Đăng nhập vào tài khoản của bạn", style: TextStyle(color: theme.textTheme.bodyMedium?.color?.withOpacity(0.6))),
-              const SizedBox(height: 40),
+              const SizedBox(height: 30),
               
               TextField(
                 controller: _emailController,
@@ -144,7 +152,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 style: TextStyle(color: theme.textTheme.bodyLarge?.color),
                 decoration: InputDecoration(
                   hintText: "Email",
-                  hintStyle: TextStyle(color: Colors.grey),
                   prefixIcon: const Icon(Iconsax.sms, color: Colors.grey),
                   filled: true,
                   fillColor: theme.cardColor,
@@ -159,7 +166,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 style: TextStyle(color: theme.textTheme.bodyLarge?.color),
                 decoration: InputDecoration(
                   hintText: "Mật khẩu",
-                  hintStyle: TextStyle(color: Colors.grey),
                   prefixIcon: const Icon(Iconsax.key, color: Colors.grey),
                   suffixIcon: IconButton(
                     icon: Icon(_obscurePassword ? Iconsax.eye_slash : Iconsax.eye, color: Colors.grey),
@@ -177,41 +183,54 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   Row(
                     children: [
-                      Checkbox(
-                        value: _rememberMe,
-                        onChanged: (v) => setState(() => _rememberMe = v!),
-                        activeColor: kprimaryColor,
-                      ),
-                      Text("Ghi nhớ Email", style: TextStyle(fontWeight: FontWeight.w500, color: theme.textTheme.bodyMedium?.color)),
+                      Checkbox(value: _rememberMe, onChanged: (v) => setState(() => _rememberMe = v!), activeColor: kprimaryColor),
+                      Text("Ghi nhớ", style: TextStyle(color: theme.textTheme.bodyMedium?.color)),
                     ],
                   ),
                   GestureDetector(
-                    onTap: () => Navigator.push(
-                      context, 
-                      MaterialPageRoute(builder: (c) => ForgotPasswordScreen(initialEmail: _emailController.text))
-                    ),
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const ForgotPasswordScreen())),
                     child: const Text("Quên mật khẩu?", style: TextStyle(color: kprimaryColor, fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 25),
               
               SizedBox(
-                width: double.infinity,
-                height: 55,
+                width: double.infinity, height: 55,
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _login,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: kprimaryColor, 
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))
-                  ),
-                  child: _isLoading 
-                    ? const CircularProgressIndicator(color: Colors.white) 
-                    : const Text("Đăng nhập", style: TextStyle(color: Colors.white, fontSize: 18)),
+                  style: ElevatedButton.styleFrom(backgroundColor: kprimaryColor, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))),
+                  child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : const Text("Đăng nhập", style: TextStyle(color: Colors.white, fontSize: 18)),
                 ),
               ),
               
               const SizedBox(height: 20),
+              const Row(
+                children: [
+                  Expanded(child: Divider()),
+                  Padding(padding: EdgeInsets.symmetric(horizontal: 10), child: Text("Hoặc")),
+                  Expanded(child: Divider()),
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              // NÚT ĐĂNG NHẬP GOOGLE
+              SizedBox(
+                width: double.infinity,
+                height: 55,
+                child: OutlinedButton.icon(
+                  onPressed: _isLoading ? null : _loginWithGoogle,
+                  icon: Image.network("https://cdn-icons-png.flaticon.com/512/2991/2991148.png", height: 24),
+                  label: const Text("Tiếp tục với Google", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                  style: OutlinedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    side: const BorderSide(color: Colors.grey),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 25),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

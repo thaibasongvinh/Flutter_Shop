@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:fodd/Provider/cart.dart';
 import 'package:fodd/Widgets/cart_screen.dart';
 import 'package:fodd/Widgets/favorite_screen.dart';
 import 'package:fodd/Views/SettingsScreen.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:provider/provider.dart';
 
 import '../Utils/Constants.dart';
 import 'FoodDetail.dart';
@@ -35,10 +37,13 @@ class _MyFoodState extends State<MyFood> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final myCart = Provider.of<MyCart>(context);
+    int cartCount = myCart.cart.length;
+
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor, // Tự đổi theo theme
+      backgroundColor: theme.scaffoldBackgroundColor,
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: theme.cardColor, // Đổi màu nền thanh điều hướng
+        backgroundColor: theme.cardColor,
           elevation: 0,
           iconSize: 28,
           currentIndex: _selectedIndex,
@@ -58,7 +63,12 @@ class _MyFoodState extends State<MyFood> {
                 label: 'Favorite'
             ),
             BottomNavigationBarItem(
-                icon: Icon(_selectedIndex == 2 ? Iconsax.shop_add5 : Iconsax.shop_add4),
+                icon: Badge(
+                  label: Text(cartCount.toString()),
+                  isLabelVisible: cartCount > 0,
+                  backgroundColor: Colors.red,
+                  child: Icon(_selectedIndex == 2 ? Iconsax.shopping_cart5 : Iconsax.shopping_cart),
+                ),
                 label: 'Cart'
             ),
             BottomNavigationBarItem(

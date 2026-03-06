@@ -1,8 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fodd/Provider/cart.dart';
-import 'package:fodd/Provider/theme_provider.dart'; // Import mới
-import 'package:fodd/Views/LoginScreen.dart';
+import 'package:fodd/Provider/theme_provider.dart';
+import 'package:fodd/Views/SplashScreen.dart';
+import 'package:fodd/Utils/notification_service.dart'; // Import mới
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'Provider/favorite.dart';
@@ -14,6 +15,9 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  // Khởi tạo thông báo
+  NotificationService().initNotification();
 
   await updatePrices();
 
@@ -42,19 +46,19 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
         providers: [
-          ChangeNotifierProvider(create: (_) => ThemeProvider()), // Thêm ThemeProvider
+          ChangeNotifierProvider(create: (_) => ThemeProvider()),
           ChangeNotifierProvider(create: (_) => MyFavorite()),
           ChangeNotifierProvider(create: (_) => MyQuantity()),
           ChangeNotifierProvider(create: (_) => MyCart()),
         ],
-        child: Consumer<ThemeProvider>( // Sử dụng Consumer để lắng nghe thay đổi Theme
+        child: Consumer<ThemeProvider>(
           builder: (context, themeProvider, child) {
             return MaterialApp(
                 debugShowCheckedModeBanner: false,
                 theme: themeProvider.lightTheme,
                 darkTheme: themeProvider.darkTheme,
                 themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-                home: const LoginScreen(),
+                home: const SplashScreen(),
             );
           },
         )
